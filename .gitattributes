@@ -1,0 +1,9 @@
+# В репозитории всегда LF — согласовано с prettier (endOfLine: lf) и .editorconfig.
+# Иначе core.autocrlf на Windows превращает каждый файл в шумный дифф.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.webp binary
+*.ico binary
+*.woff2 binary

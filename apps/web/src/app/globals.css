@@ -1,0 +1,11 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-forge-bg: oklch(0.18 0.02 275);
+  --color-forge-accent: oklch(0.72 0.19 320);
+}
+
+body {
+  background-color: var(--color-forge-bg);
+  color: white;
+}
