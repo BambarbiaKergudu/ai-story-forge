@@ -12,6 +12,8 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
     "format": "prettier --write \"**/*.{ts,tsx,mjs,json,css,md,yaml,yml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,mjs,json,css,md,yaml,yml}\""
   },

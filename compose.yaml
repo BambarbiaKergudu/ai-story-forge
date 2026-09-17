@@ -1,0 +1,49 @@
+# Локальная инфраструктура фазы 0. Приложения (web/api) сюда не входят —
+# их по-прежнему поднимает `pnpm dev` на хосте.
+#
+# С хоста Postgres и Redis видны как localhost. Имена сервисов (postgres, redis)
+# резолвятся только между контейнерами; в DATABASE_URL для Nest/Prisma будет localhost.
+name: ai-story-forge
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: asf-postgres
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-asf}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-asf}
+      POSTGRES_DB: ${POSTGRES_DB:-asf}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # Подставляется при разборе YAML (как POSTGRES_USER выше), не внутри контейнера.
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-asf} -d ${POSTGRES_DB:-asf}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: asf-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
