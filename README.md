@@ -16,8 +16,8 @@ pnpm dev
 ```
 
 - инфраструктура: Postgres `localhost:5432`, Redis `localhost:6379`
-- web: http://localhost:3000
-- api health: http://localhost:3001/v1/health
+- web: http://localhost:3000 (на главной — статус `GET /v1/health`)
+- api health: http://localhost:3001/v1/health (проверяет Postgres; без БД — не 200)
 
 Повторный `pnpm db:seed` не плодит дубли: витринная история создаётся один раз. Схема БД — `apps/api/prisma/schema.prisma`.
 

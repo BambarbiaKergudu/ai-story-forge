@@ -20,10 +20,15 @@
   },
   "dependencies": {
     "@asf/contracts": "workspace:*",
-    "@prisma/client": "6.19.3",
     "@nestjs/common": "^12.0.1",
+    "@nestjs/config": "^12.0.0",
     "@nestjs/core": "^12.0.1",
     "@nestjs/platform-express": "^12.0.1",
+    "@nestjs/terminus": "^12.0.0",
+    "@prisma/client": "6.19.3",
+    "nestjs-pino": "^5.2.0",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "zod": "catalog:"
@@ -34,11 +39,12 @@
     "@nestjs/schematics": "^12.0.0",
     "@types/node": "catalog:",
     "dotenv-cli": "^11.0.0",
+    "pino-pretty": "^13.1.3",
     "prisma": "6.19.3",
-    "tsx": "^4.21.0",
     "rimraf": "catalog:",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "catalog:"
   }
 }
