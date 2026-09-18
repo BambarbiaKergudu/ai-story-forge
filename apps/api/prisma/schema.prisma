@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+
+  stories Story[]
+  quota   Quota?
+}
+
+model Quota {
+  userId          String   @id
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  draftUsed       Int      @default(0)
+  consistentUsed  Int      @default(0)
+  periodStartedAt DateTime @default(now())
+}
+
+model Story {
+  id         String      @id @default(cuid())
+  userId     String?
+  guestKey   String?
+  idea       String      @db.Text
+  title      String?
+  styleId    String
+  quality    Quality
+  status     StoryStatus
+  isShowcase Boolean     @default(false)
+  characters Json?
+  costCents  Int         @default(0)
+  error      String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  user   User?           @relation(fields: [userId], references: [id])
+  panels Panel[]
+  jobs   GenerationJob[]
+
+  @@index([userId, createdAt])
+  @@index([isShowcase])
+}
+
+model Panel {
+  id          String      @id @default(cuid())
+  storyId     String
+  order       Int
+  caption     String      @db.Text
+  imagePrompt String      @db.Text
+  imageUrl    String?
+  imageKey    String?
+  status      PanelStatus
+  attempts    Int         @default(0)
+  error       String?
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, order])
+}
+
+model GenerationJob {
+  id             String    @id @default(cuid())
+  storyId        String
+  panelId        String?
+  kind           JobKind
+  status         JobStatus
+  idempotencyKey String    @unique
+  provider       String?
+  costCents      Int       @default(0)
+  latencyMs      Int?
+  error          String?
+  createdAt      DateTime  @default(now())
+  finishedAt     DateTime?
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@index([storyId])
+}
+
+enum Quality {
+  DRAFT
+  CONSISTENT
+}
+
+enum StoryStatus {
+  DRAFT_PENDING
+  SCRIPT_READY
+  RENDERING
+  COMPLETED
+  PARTIAL
+  FAILED
+}
+
+enum PanelStatus {
+  PENDING
+  GENERATING
+  READY
+  FAILED
+}
+
+enum JobKind {
+  SCRIPT
+  PANEL_IMAGE
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
