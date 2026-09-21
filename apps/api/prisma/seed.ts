@@ -11,24 +11,32 @@ const PANELS = [
     caption: 'Ночной дождь. Кот в плаще смотрит на пустой аквариум.',
     imagePrompt:
       'Noir neon city, anthropomorphic detective cat in a trench coat, empty fishbowl, rain, cinematic lighting',
+    shotType: 'establishing',
+    cameraAngle: 'eye-level',
   },
   {
     order: 2,
     caption: 'На мокром асфальте — одна золотая чешуйка и след лапы.',
     imagePrompt:
       'Close-up of wet neon pavement, single gold fish scale, paw print, detective cat inspecting, moody',
+    shotType: 'insert',
+    cameraAngle: 'high-angle',
   },
   {
     order: 3,
     caption: 'В подводном баре рыбы делают вид, что ничего не знают.',
     imagePrompt:
       'Underground speakeasy aquarium bar, fish patrons, detective cat at the counter, neon signs, comic panel',
+    shotType: 'medium',
+    cameraAngle: 'dutch-angle',
   },
   {
     order: 4,
     caption: 'Рыбка нашлась: она сама ушла искать приключения.',
     imagePrompt:
       'Goldfish in tiny leather jacket on a scooter, detective cat tipping his hat, neon city background, happy ending',
+    shotType: 'wide',
+    cameraAngle: 'eye-level',
   },
 ] as const;
 

@@ -282,7 +282,7 @@ Heartbeat-комментарий каждые 15 секунд, иначе про
 
 ```
 {styleDescription}. {characterSheet}. Scene: {sceneDescription}.
-Composition: {shotType}. No text, no speech bubbles, no watermark.
+Composition: {shotType}, {cameraAngle}. No text, no speech bubbles, no watermark.
 ```
 
 **Уровень 2 (режим `consistent`).** Первая панель генерируется обычным способом и

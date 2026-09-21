@@ -55,6 +55,11 @@ model Panel {
   order       Int
   caption     String      @db.Text
   imagePrompt String      @db.Text
+  // Композиция кадра нужна и при перегенерации панели, поэтому хранится отдельно,
+  // а не запекается в imagePrompt. Значения — из SHOT_TYPES / CAMERA_ANGLES
+  // в @asf/contracts; как и styleId, валидируются zod на границе, а не enum'ом БД.
+  shotType    String
+  cameraAngle String
   imageUrl    String?
   imageKey    String?
   status      PanelStatus
