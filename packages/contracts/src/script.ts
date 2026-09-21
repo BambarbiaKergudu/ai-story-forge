@@ -52,14 +52,16 @@ export const PANEL_COUNT = 4;
  */
 export const characterSchema = z.object({
   name: z.string().min(1).max(60),
-  appearance: z.string().min(20).max(400),
+  // Верхней границы нет: длинный паспорт не должен ронять всю историю.
+  // Краткость просим в промпте, пустую строку отсекает min.
+  appearance: z.string().min(20),
 });
 
 export type Character = z.infer<typeof characterSchema>;
 
 export const scriptPanelSchema = z.object({
-  caption: z.string().min(1).max(240),
-  imagePrompt: z.string().min(20).max(600),
+  caption: z.string().min(1),
+  imagePrompt: z.string().min(20),
   shotType: shotTypeSchema,
   cameraAngle: cameraAngleSchema,
 });
@@ -74,11 +76,12 @@ export type ScriptPanel = z.infer<typeof scriptPanelSchema>;
  * Порядок панелей задаётся порядком в массиве: `Panel.order` проставляет api при
  * записи в БД, модель номерами не заведует.
  *
- * `imagePrompt` ожидается на английском — это требование живёт в тексте промпта,
- * схема проверяет только длину.
+ * `imagePrompt` и `appearance` ожидаются на английском и короткими — это просьба
+ * в тексте промпта. Схема требует лишь минимум 20 символов: слишком длинный
+ * ответ не отбрасывает всю историю.
  */
 export const storyScriptSchema = z.object({
-  title: z.string().min(1).max(80),
+  title: z.string().min(1),
   characters: z.array(characterSchema).min(1).max(4),
   panels: z.array(scriptPanelSchema).length(PANEL_COUNT),
 });
