@@ -14,26 +14,37 @@ permissions:
   contents: read
 
 jobs:
-  ci:
-    runs-on: ubuntu-latest
+  install:
+    name: Install dependencies
+    # Не ubuntu-latest: с 19 октября 2026 он станет Ubuntu 26.
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-node-pnpm
 
-      - uses: pnpm/action-setup@v4
+  lint:
+    name: Lint
+    needs: install
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm lint
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
+  typecheck:
+    name: Typecheck
+    needs: install
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm typecheck
 
-      - name: Install
-        run: pnpm install --frozen-lockfile
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Build
-        run: pnpm build
+  build:
+    name: Build
+    needs: install
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm build
