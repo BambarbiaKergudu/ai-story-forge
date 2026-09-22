@@ -6,6 +6,7 @@ import { envFilePaths, validateEnv, type Env } from './env';
 import { HealthModule } from './health/health.module';
 import { LlmModule } from './llm/llm.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { StoriesModule } from './stories/stories.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { PrismaModule } from './prisma/prisma.module';
     PrismaModule,
     HealthModule,
     LlmModule,
+    StoriesModule,
   ],
 })
 export class AppModule {}
