@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 
 import { envFilePaths, validateEnv, type Env } from './env';
+import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
 import { LlmModule } from './llm/llm.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -39,6 +40,7 @@ import { StoriesModule } from './stories/stories.module';
       },
     }),
     PrismaModule,
+    AuthModule,
     HealthModule,
     LlmModule,
     StoriesModule,

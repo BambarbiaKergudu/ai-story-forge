@@ -11,6 +11,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./service-jwt": {
+      "types": "./dist/sign-service-jwt.d.ts",
+      "import": "./dist/sign-service-jwt.js",
+      "require": "./dist/sign-service-jwt.cjs"
     }
   },
   "files": [
@@ -28,6 +33,7 @@
   },
   "devDependencies": {
     "@asf/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
     "rimraf": "catalog:",
     "tsup": "^8.5.1",
     "typescript": "catalog:"

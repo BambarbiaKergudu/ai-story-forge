@@ -19,6 +19,8 @@ export const envSchema = z.object({
   ),
   GROQ_MODEL: z.string().min(1).default('openai/gpt-oss-20b'),
   GROQ_BASE_URL: z.string().url().default('https://api.groq.com/openai/v1'),
+  /** Общий секрет HS256: `web` подписывает вызов, API проверяет. Минимум 32 символа. */
+  SERVICE_JWT_SECRET: z.string().min(32),
 });
 
 export type Env = z.infer<typeof envSchema>;

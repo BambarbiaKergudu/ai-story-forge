@@ -185,6 +185,9 @@ importers:
       '@asf/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.4
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3

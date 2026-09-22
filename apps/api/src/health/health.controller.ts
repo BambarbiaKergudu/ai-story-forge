@@ -2,6 +2,7 @@ import { Controller, Get, Inject } from '@nestjs/common';
 import { HealthCheckService } from '@nestjs/terminus';
 import { healthResponseSchema, type HealthResponse } from '@asf/contracts';
 
+import { Public } from '../auth/public.decorator';
 import { PrismaHealthIndicator } from './prisma.health';
 
 @Controller()
@@ -11,6 +12,7 @@ export class HealthController {
     @Inject(PrismaHealthIndicator) private readonly prismaHealth: PrismaHealthIndicator,
   ) {}
 
+  @Public()
   @Get('health')
   async check(): Promise<HealthResponse> {
     await this.health.check([() => this.prismaHealth.ping()]);

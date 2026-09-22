@@ -1,4 +1,4 @@
-import type { CreateStoryRequest, StoryResponse } from '@asf/contracts';
+import type { CreateStoryRequest, ServiceJwtClaims, StoryResponse } from '@asf/contracts';
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 
@@ -10,6 +10,15 @@ import { toDbQuality, toStoryResponse } from './story.mapper';
 
 const storyInclude = { panels: { orderBy: { order: 'asc' as const } } } satisfies Prisma.StoryInclude;
 
+/** Гость пишется в `guestKey`. `userId` — внешний ключ на `User`, строку создаёт фаза 3. */
+function storyOwner(actor: ServiceJwtClaims): { guestKey: string } | { userId: string } {
+  if (actor.role === 'guest') {
+    return { guestKey: actor.guestKey };
+  }
+
+  return { userId: actor.userId };
+}
+
 @Injectable()
 export class StoriesService {
   private readonly logger = new Logger(StoriesService.name);
@@ -19,7 +28,7 @@ export class StoriesService {
     @Inject(LlmService) private readonly llm: LlmService,
   ) {}
 
-  async create(input: CreateStoryRequest): Promise<StoryResponse> {
+  async create(input: CreateStoryRequest, actor: ServiceJwtClaims): Promise<StoryResponse> {
     const script = await this.generate(input);
 
     const story = await this.prisma.story.create({
@@ -30,6 +39,7 @@ export class StoriesService {
         quality: toDbQuality(input.quality),
         status: 'SCRIPT_READY',
         characters: script.characters,
+        ...storyOwner(actor),
         panels: {
           create: script.panels.map((panel, index) => ({
             order: index + 1,
