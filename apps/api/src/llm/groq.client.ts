@@ -8,6 +8,8 @@ import { LlmResponseError } from './llm.error';
 import { storyScriptJsonSchema } from './story-script.json-schema';
 
 const TIMEOUT_MS = 30_000;
+/** Сырой ответ в details режется: в повторный промпт нужен сигнал об ошибке, не хвост JSON. */
+const DETAILS_LIMIT = 250;
 
 const groqCompletionSchema = z.object({
   choices: z
@@ -82,7 +84,7 @@ export class GroqClient {
       );
       throw new LlmResponseError('http', `Groq responded ${response.status}`, {
         status: response.status,
-        details: body.slice(0, 500),
+        details: body.slice(0, DETAILS_LIMIT),
       });
     }
 
@@ -91,7 +93,7 @@ export class GroqClient {
     const content = completion.success ? completion.data.choices[0]?.message.content : undefined;
     if (!content) {
       throw new LlmResponseError('empty', 'Groq returned no message content', {
-        details: JSON.stringify(json).slice(0, 500),
+        details: JSON.stringify(json).slice(0, DETAILS_LIMIT),
       });
     }
 
@@ -101,7 +103,7 @@ export class GroqClient {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'invalid JSON';
       throw new LlmResponseError('invalid_json', 'Groq content is not JSON', {
-        details: `${message}: ${content.slice(0, 500)}`,
+        details: `${message}: ${content}`.slice(0, DETAILS_LIMIT),
       });
     }
 
