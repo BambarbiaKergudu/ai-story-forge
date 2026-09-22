@@ -10,6 +10,8 @@ const STYLE_BLURB: Record<StyleId, string> = {
 export type ScriptPromptInput = {
   idea: string;
   styleId: StyleId;
+  /** Текст ошибки прошлой попытки. На первом запросе его нет. */
+  correction?: string;
 };
 
 export function buildScriptMessages(input: ScriptPromptInput): {
@@ -26,8 +28,14 @@ export function buildScriptMessages(input: ScriptPromptInput): {
       'shotType чередуй между панелями. cameraAngle ставь eye-level, если сцене не нужен другой ракурс.',
       `Допустимые styleId: ${STYLE_IDS.join(', ')}.`,
     ].join('\n'),
-    user: [`Идея: ${input.idea}`, `Стиль (${input.styleId}): ${STYLE_BLURB[input.styleId]}.`].join(
-      '\n',
-    ),
+    user: [
+      `Идея: ${input.idea}`,
+      `Стиль (${input.styleId}): ${STYLE_BLURB[input.styleId]}.`,
+      input.correction
+        ? `Предыдущий ответ отклонён. Исправь указанное и верни полный JSON заново:\n${input.correction}`
+        : undefined,
+    ]
+      .filter((line) => line !== undefined)
+      .join('\n'),
   };
 }

@@ -1,8 +1,8 @@
 export type LlmFailureKind = 'unconfigured' | 'timeout' | 'http' | 'empty' | 'invalid_json' | 'schema';
 
 /**
- * Ошибка текстового шага. `details` — текст для будущего ретрая в промпте
- * (следующий шаг фазы); сам повтор здесь не делается.
+ * Ошибка текстового шага. `details` уходит в промпт следующей попытки,
+ * если вид ошибки повторный (`empty`, `invalid_json`, `schema`).
  */
 export class LlmResponseError extends Error {
   readonly kind: LlmFailureKind;
