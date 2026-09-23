@@ -18,7 +18,8 @@ overrides:
   zod: 4.6.1
 
 # pnpm не выполняет postinstall-скрипты зависимостей, пока их явно не разрешишь.
-# Этим разрешено: нужно распаковать нативный бинарник под платформу.
+# true — нужно распаковать нативный бинарник под платформу.
+# false — скрипт есть, но сборка не нужна. Без такой записи установка падает.
 allowBuilds:
   esbuild: true
   prisma: true
@@ -26,3 +27,5 @@ allowBuilds:
   "@prisma/engines": true
   sharp: true
   unrs-resolver: true
+  # Скрипт выбирает готовый бинарник msgpack для BullMQ.
+  msgpackr-extract: true
