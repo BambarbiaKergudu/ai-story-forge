@@ -2,10 +2,12 @@ import { resolve } from 'node:path';
 
 import { z } from 'zod';
 
-const optionalSecret = z.preprocess(
-  (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
-  z.string().min(1).optional(),
-);
+const blankToUndefined = (value: unknown) =>
+  typeof value === 'string' && value.trim() === '' ? undefined : value;
+
+const optionalSecret = z.preprocess(blankToUndefined, z.string().min(1).optional());
+
+const optionalUrl = z.preprocess(blankToUndefined, z.string().url().optional());
 
 export const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
@@ -29,6 +31,16 @@ export const envSchema = z.object({
    */
   FAL_KEY: optionalSecret,
   GEMINI_API_KEY: optionalSecret,
+  /**
+   * R2 не обязателен на старте: `/health` поднимается без бакета.
+   * Пустая строка из `.env` считается отсутствием значения.
+   * `StorageService` отказывает в момент загрузки, если набор неполный.
+   */
+  R2_ACCOUNT_ID: optionalSecret,
+  R2_ACCESS_KEY_ID: optionalSecret,
+  R2_SECRET_ACCESS_KEY: optionalSecret,
+  R2_BUCKET: optionalSecret,
+  R2_PUBLIC_BASE_URL: optionalUrl,
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -8,6 +8,7 @@ import { HealthModule } from './health/health.module';
 import { ImagesModule } from './images/images.module';
 import { LlmModule } from './llm/llm.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { StorageModule } from './storage/storage.module';
 import { StoriesModule } from './stories/stories.module';
 
 @Module({
@@ -45,6 +46,7 @@ import { StoriesModule } from './stories/stories.module';
     HealthModule,
     LlmModule,
     ImagesModule,
+    StorageModule,
     StoriesModule,
   ],
 })

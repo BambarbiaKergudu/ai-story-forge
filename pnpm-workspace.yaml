@@ -24,4 +24,5 @@ allowBuilds:
   prisma: true
   "@prisma/client": true
   "@prisma/engines": true
+  sharp: true
   unrs-resolver: true
