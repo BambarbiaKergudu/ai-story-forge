@@ -19,6 +19,20 @@ export function panelObjectKey(storyId: string, panelId: string, attempt: number
   return `stories/${storyId}/${panelId}-${attempt}.webp`;
 }
 
+/** WebP из R2 обратно в PNG: референс Gemini принимает только PNG. */
+export async function toPng(source: Buffer): Promise<Buffer> {
+  if (source.length === 0) {
+    throw new StorageResponseError('invalid', 'image is empty');
+  }
+
+  try {
+    return await sharp(source, { failOn: 'error' }).png().toBuffer();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'png encode failed';
+    throw new StorageResponseError('invalid', message);
+  }
+}
+
 export async function encodeWebp(source: Buffer): Promise<Buffer> {
   if (source.length === 0) {
     throw new StorageResponseError('invalid', 'image is empty');

@@ -6,6 +6,7 @@ import { envFilePaths, validateEnv, type Env } from './env';
 import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
 import { ImagesModule } from './images/images.module';
+import { JobsModule } from './jobs/jobs.module';
 import { LlmModule } from './llm/llm.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { StorageModule } from './storage/storage.module';
@@ -47,6 +48,7 @@ import { StoriesModule } from './stories/stories.module';
     LlmModule,
     ImagesModule,
     StorageModule,
+    JobsModule,
     StoriesModule,
   ],
 })

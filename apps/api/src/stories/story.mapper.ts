@@ -15,6 +15,10 @@ export function toDbQuality(quality: Quality): DbQuality {
   return QUALITY_TO_DB[quality];
 }
 
+export function fromDbQuality(quality: DbQuality): Quality {
+  return QUALITY_FROM_DB[quality];
+}
+
 type StoryWithPanels = Prisma.StoryGetPayload<{ include: { panels: true } }>;
 
 export function toStoryResponse(story: StoryWithPanels): StoryResponse {

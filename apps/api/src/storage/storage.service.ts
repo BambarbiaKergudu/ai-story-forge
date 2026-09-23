@@ -35,6 +35,10 @@ export class StorageService {
 
   constructor(@Inject(ConfigService) private readonly config: ConfigService<Env, true>) {}
 
+  async downloadImage(url: string): Promise<Buffer> {
+    return this.download(url);
+  }
+
   async storePanelImage(input: StorePanelImageInput): Promise<StoredPanelImage> {
     const key = panelObjectKey(input.storyId, input.panelId, input.attempt);
     const started = Date.now();
