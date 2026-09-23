@@ -43,6 +43,15 @@ export const CAMERA_ANGLES = [
 export const cameraAngleSchema = z.enum(CAMERA_ANGLES);
 export type CameraAngle = z.infer<typeof cameraAngleSchema>;
 
+/**
+ * Такт сюжета. Порядок фиксирован: панель 1 — завязка, 2 — препятствие или улика,
+ * 3 — поворот, 4 — развязка. В JSON Schema это enum, порядок проверяет api после ответа.
+ */
+export const STORY_BEATS = ['setup', 'obstacle', 'turn', 'payoff'] as const;
+
+export const storyBeatSchema = z.enum(STORY_BEATS);
+export type StoryBeat = z.infer<typeof storyBeatSchema>;
+
 /** Длина истории зафиксирована: 4 панели и в промпте, и в БД, и в UI. */
 export const PANEL_COUNT = 4;
 
@@ -60,6 +69,7 @@ export const characterSchema = z.object({
 export type Character = z.infer<typeof characterSchema>;
 
 export const scriptPanelSchema = z.object({
+  beat: storyBeatSchema,
   caption: z.string().min(1),
   imagePrompt: z.string().min(20),
   shotType: shotTypeSchema,
@@ -76,6 +86,8 @@ export type ScriptPanel = z.infer<typeof scriptPanelSchema>;
  * Порядок панелей задаётся порядком в массиве: `Panel.order` проставляет api при
  * записи в БД, модель номерами не заведует.
  *
+ * `beat` обязан идти setup → obstacle → turn → payoff. Одинаковые `imagePrompt`
+ * схема не ловит: это проверяет api и при провале повторяет запрос.
  * `imagePrompt` и `appearance` ожидаются на английском и короткими — это просьба
  * в тексте промпта. Схема требует лишь минимум 20 символов: слишком длинный
  * ответ не отбрасывает всю историю.

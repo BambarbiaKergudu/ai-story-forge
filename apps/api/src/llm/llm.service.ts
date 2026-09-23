@@ -3,6 +3,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 
 import { GroqClient } from './groq.client';
 import { LlmResponseError } from './llm.error';
+import { scriptPlotIssues } from './script-plot';
 import { SCRIPT_ATTEMPTS, scriptRetryCorrection } from './script-retry';
 import { buildScriptMessages } from './script-prompt';
 
@@ -26,7 +27,16 @@ export class LlmService {
 
     for (let attempt = 1; attempt <= SCRIPT_ATTEMPTS; attempt++) {
       try {
-        return await this.groq.completeScript(buildScriptMessages({ ...input, correction }));
+        const script = await this.groq.completeScript(
+          buildScriptMessages({ ...input, correction }),
+        );
+        const plot = scriptPlotIssues(script);
+        if (plot !== undefined) {
+          throw new LlmResponseError('schema', 'script plot is not four distinct beats', {
+            details: plot,
+          });
+        }
+        return script;
       } catch (error) {
         if (!(error instanceof LlmResponseError)) {
           throw error;
