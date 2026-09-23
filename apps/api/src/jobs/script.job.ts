@@ -6,6 +6,7 @@ import { UnrecoverableError } from 'bullmq';
 
 import { LlmService } from '../llm/llm.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { StoryEventsService } from '../story-events/story-events.service';
 import { scriptJobSchema, type ScriptJobData } from './job-data';
 import { idempotencyKey } from './idempotency-key';
 import { JobEnqueuer } from './job-enqueuer';
@@ -29,6 +30,7 @@ export class ScriptJob {
     @Inject(LlmService) private readonly llm: LlmService,
     @Inject(JobEnqueuer) private readonly jobs: JobEnqueuer,
     @Inject(JobRunner) private readonly runner: JobRunner,
+    @Inject(StoryEventsService) private readonly events: StoryEventsService,
   ) {}
 
   async handle(job: Job): Promise<void> {
@@ -83,8 +85,31 @@ export class ScriptJob {
       throw new UnrecoverableError(`story ${story.id} has ${story.panels.length} panels`);
     }
 
+    await this.publishScriptReady(story.id);
     await this.fanOut(story.id, story.quality);
     return {};
+  }
+
+  private async publishScriptReady(storyId: string): Promise<void> {
+    const story = await this.prisma.story.findUnique({
+      where: { id: storyId },
+      include: { panels: { orderBy: { order: 'asc' } } },
+    });
+    if (!story?.title || story.panels.length !== PANEL_COUNT) {
+      return;
+    }
+
+    this.events.publish(storyId, {
+      event: 'story.script_ready',
+      data: {
+        title: story.title,
+        panels: story.panels.map((panel) => ({
+          id: panel.id,
+          order: panel.order,
+          caption: panel.caption,
+        })),
+      },
+    });
   }
 
   /**

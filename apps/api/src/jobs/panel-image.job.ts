@@ -14,12 +14,13 @@ import { ImagesService } from '../images/images.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { toPng } from '../storage/panel-image';
+import { StoryEventsService } from '../story-events/story-events.service';
 import { fromDbQuality } from '../stories/story.mapper';
 import { panelImageJobSchema, type PanelImageJobData } from './job-data';
 import { idempotencyKey } from './idempotency-key';
 import { JobEnqueuer } from './job-enqueuer';
 import { JobRunner } from './job-runner';
-import { jobErrorMessage } from './retryable';
+import { isRetryableJobError, jobErrorMessage } from './retryable';
 import { storySeed } from './story-seed';
 
 function parsePanelJob(data: unknown): PanelImageJobData {
@@ -42,6 +43,7 @@ export class PanelImageJob {
     @Inject(StorageService) private readonly storage: StorageService,
     @Inject(JobEnqueuer) private readonly jobs: JobEnqueuer,
     @Inject(JobRunner) private readonly runner: JobRunner,
+    @Inject(StoryEventsService) private readonly events: StoryEventsService,
   ) {}
 
   async handle(job: Job): Promise<void> {
@@ -82,6 +84,10 @@ export class PanelImageJob {
       where: { id: panel.id },
       data: { status: 'GENERATING', attempts: { increment: 1 }, error: null },
     });
+    this.events.publish(panel.storyId, {
+      event: 'panel.generating',
+      data: { panelId: panel.id },
+    });
 
     const quality = fromDbQuality(panel.story.quality);
     const image = await this.images.generate({
@@ -118,6 +124,10 @@ export class PanelImageJob {
     ]);
 
     this.logger.log(`panel ${panel.id} stored key=${stored.key}`);
+    this.events.publish(panel.storyId, {
+      event: 'panel.ready',
+      data: { panelId: panel.id, imageUrl: stored.url },
+    });
     await this.afterReady(panel.storyId, panel.story.quality, panel.order);
     return { provider: image.provider, costCents: image.costCents };
   }
@@ -169,16 +179,44 @@ export class PanelImageJob {
     }
 
     const failed = panels.some((panel) => panel.status === 'FAILED');
-    await this.prisma.story.updateMany({
+    const nextStatus = failed ? 'PARTIAL' : 'COMPLETED';
+    const current = await this.prisma.story.findUnique({ where: { id: storyId } });
+    if (!current || current.status === nextStatus) {
+      return;
+    }
+
+    const updated = await this.prisma.story.updateMany({
       where: { id: storyId, status: { in: ['SCRIPT_READY', 'RENDERING', 'PARTIAL', 'COMPLETED'] } },
-      data: { status: failed ? 'PARTIAL' : 'COMPLETED' },
+      data: { status: nextStatus },
+    });
+    if (updated.count === 0) {
+      return;
+    }
+
+    const story = await this.prisma.story.findUnique({ where: { id: storyId } });
+    if (!story || (story.status !== 'COMPLETED' && story.status !== 'PARTIAL')) {
+      return;
+    }
+
+    this.events.publish(storyId, {
+      event: 'story.completed',
+      data: { status: story.status, costCents: story.costCents },
     });
   }
 
   private async failPanel(data: PanelImageJobData, error: unknown): Promise<void> {
+    const message = jobErrorMessage(error);
     await this.prisma.panel.updateMany({
       where: { id: data.panelId, status: { not: 'READY' } },
-      data: { status: 'FAILED', error: jobErrorMessage(error) },
+      data: { status: 'FAILED', error: message },
+    });
+    this.events.publish(data.storyId, {
+      event: 'panel.failed',
+      data: {
+        panelId: data.panelId,
+        error: message,
+        retryable: isRetryableJobError(error),
+      },
     });
     await this.rollup(data.storyId);
   }
