@@ -1,14 +1,25 @@
-import type { CreateStoryRequest, ServiceJwtClaims, StoryResponse } from '@asf/contracts';
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import type {
+  AcceptedStory,
+  CreateStoryRequest,
+  ServiceJwtClaims,
+  StoryResponse,
+} from '@asf/contracts';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 
-import { LlmResponseError } from '../llm/llm.error';
-import { LlmService } from '../llm/llm.service';
+import { JobEnqueuer } from '../jobs/job-enqueuer';
 import { PrismaService } from '../prisma/prisma.service';
-import { storyGenerationFailed } from './stories.errors';
 import { toDbQuality, toStoryResponse } from './story.mapper';
 
-const storyInclude = { panels: { orderBy: { order: 'asc' as const } } } satisfies Prisma.StoryInclude;
+const storyInclude = {
+  panels: { orderBy: { order: 'asc' as const } },
+} satisfies Prisma.StoryInclude;
 
 /** Гость пишется в `guestKey`. `userId` — внешний ключ на `User`, строку создаёт фаза 3. */
 function storyOwner(actor: ServiceJwtClaims): { guestKey: string } | { userId: string } {
@@ -25,37 +36,33 @@ export class StoriesService {
 
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(LlmService) private readonly llm: LlmService,
+    @Inject(JobEnqueuer) private readonly jobs: JobEnqueuer,
   ) {}
 
-  async create(input: CreateStoryRequest, actor: ServiceJwtClaims): Promise<StoryResponse> {
-    const script = await this.generate(input);
-
+  async create(input: CreateStoryRequest, actor: ServiceJwtClaims): Promise<AcceptedStory> {
     const story = await this.prisma.story.create({
       data: {
         idea: input.idea,
-        title: script.title,
         styleId: input.styleId,
         quality: toDbQuality(input.quality),
-        status: 'SCRIPT_READY',
-        characters: script.characters,
+        status: 'DRAFT_PENDING',
         ...storyOwner(actor),
-        panels: {
-          create: script.panels.map((panel, index) => ({
-            order: index + 1,
-            caption: panel.caption,
-            imagePrompt: panel.imagePrompt,
-            shotType: panel.shotType,
-            cameraAngle: panel.cameraAngle,
-            status: 'PENDING',
-          })),
-        },
       },
-      include: storyInclude,
     });
 
-    this.logger.log(`story ${story.id} script ready, panels=${story.panels.length}`);
-    return toStoryResponse(story);
+    try {
+      await this.jobs.enqueueScript({ storyId: story.id });
+    } catch {
+      await this.prisma.story.update({
+        where: { id: story.id },
+        data: { status: 'FAILED', error: 'could not enqueue script' },
+      });
+      this.logger.error(`story ${story.id} could not be queued`);
+      throw new ServiceUnavailableException('Could not queue the story');
+    }
+
+    this.logger.log(`story ${story.id} queued`);
+    return { storyId: story.id, status: story.status };
   }
 
   async findOne(id: string): Promise<StoryResponse> {
@@ -69,20 +76,5 @@ export class StoriesService {
     }
 
     return toStoryResponse(story);
-  }
-
-  private async generate(input: CreateStoryRequest) {
-    try {
-      return await this.llm.generateScript({ idea: input.idea, styleId: input.styleId });
-    } catch (error) {
-      if (error instanceof LlmResponseError) {
-        this.logger.warn(
-          `story script failed kind=${error.kind}${error.status ? ` status=${error.status}` : ''}`,
-        );
-        throw storyGenerationFailed(error);
-      }
-
-      throw error;
-    }
   }
 }

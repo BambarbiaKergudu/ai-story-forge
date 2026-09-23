@@ -1,6 +1,6 @@
 'use server';
 
-import { createStoryRequestSchema, storyResponseSchema, type StoryResponse } from '@asf/contracts';
+import { acceptedStorySchema, createStoryRequestSchema } from '@asf/contracts';
 import { redirect } from 'next/navigation';
 
 import { apiFetch } from '@/server/api';
@@ -13,7 +13,10 @@ export type CreateStoryState = {
   quality?: string;
 };
 
-export async function createStory(_prev: CreateStoryState, formData: FormData): Promise<CreateStoryState> {
+export async function createStory(
+  _prev: CreateStoryState,
+  formData: FormData,
+): Promise<CreateStoryState> {
   const idea = String(formData.get('idea') ?? '');
   const styleId = String(formData.get('styleId') ?? '');
   const quality = String(formData.get('quality') ?? '');
@@ -26,10 +29,14 @@ export async function createStory(_prev: CreateStoryState, formData: FormData): 
 
   let response: Response;
   try {
-    response = await apiFetch('/v1/stories', { role: 'guest', guestKey: await currentGuestKey() }, {
-      method: 'POST',
-      body: JSON.stringify(parsed.data),
-    });
+    response = await apiFetch(
+      '/v1/stories',
+      { role: 'guest', guestKey: await currentGuestKey() },
+      {
+        method: 'POST',
+        body: JSON.stringify(parsed.data),
+      },
+    );
   } catch {
     return { ...values, error: 'Не удалось связаться с сервисом историй.' };
   }
@@ -38,14 +45,14 @@ export async function createStory(_prev: CreateStoryState, formData: FormData): 
     return { ...values, error: failureMessage(response.status) };
   }
 
-  let story: StoryResponse;
+  let accepted: { storyId: string };
   try {
-    story = storyResponseSchema.parse(await response.json());
+    accepted = acceptedStorySchema.parse(await response.json());
   } catch {
     return { ...values, error: 'Сервис вернул неожиданный ответ.' };
   }
 
-  redirect(`/?story=${story.story.id}`);
+  redirect(`/?story=${accepted.storyId}`);
 }
 
 function ideaError(paths: unknown[]): string {
@@ -62,7 +69,7 @@ function failureMessage(status: number): string {
   }
 
   if (status === 503) {
-    return 'Генерация текста сейчас недоступна.';
+    return 'Не удалось поставить историю в очередь. Попробуйте ещё раз.';
   }
 
   if (status === 400) {

@@ -16,7 +16,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const loaded = storyId ? await loadStory(storyId) : undefined;
 
   return (
-    <main className="mx-auto flex min-h-screen w-full min-w-0 max-w-2xl flex-col gap-8 px-[clamp(1rem,4vw,1.5rem)] py-8">
+    <main className="mx-auto flex min-h-screen w-full max-w-2xl min-w-0 flex-col gap-8 px-[clamp(1rem,4vw,1.5rem)] py-8">
       <header className="flex min-w-0 flex-col gap-2">
         <h1 className="text-[clamp(1.75rem,5vw,2.5rem)] font-bold text-(--color-forge-accent)">
           AI Story Forge
@@ -39,11 +39,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
 function StoryResult({ response }: { response: StoryResponse }) {
   const { story, panels } = response;
+  const note = statusNote(story.status);
 
   return (
     <section className="flex min-w-0 flex-col gap-4">
       <header className="flex min-w-0 flex-col gap-1">
-        <h2 className="text-xl font-semibold break-words">{story.title ?? 'Без названия'}</h2>
+        <h2 className="text-xl font-semibold break-words">{story.title ?? 'История создаётся'}</h2>
+        {note ? <p className="text-sm break-words text-white/70">{note}</p> : null}
         <p className="text-sm break-words text-white/50">
           {STYLE_LABELS[story.styleId]} · {QUALITY_LABELS[story.quality]}
           {story.characters.length > 0
@@ -65,4 +67,16 @@ function StoryResult({ response }: { response: StoryResponse }) {
       </ol>
     </section>
   );
+}
+
+function statusNote(status: StoryResponse['story']['status']): string | null {
+  if (status === 'DRAFT_PENDING') {
+    return 'Сценарий собирается. Обновите страницу через несколько секунд.';
+  }
+
+  if (status === 'FAILED') {
+    return 'Сценарий собрать не удалось.';
+  }
+
+  return null;
 }

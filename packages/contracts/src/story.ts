@@ -50,10 +50,18 @@ export const storyViewSchema = z.object({
 
 export type StoryView = z.infer<typeof storyViewSchema>;
 
-/** Тело `GET /v1/stories/:id` и синхронного `POST /v1/stories` фазы 1. */
+/** Тело `GET /v1/stories/:id`. */
 export const storyResponseSchema = z.object({
   story: storyViewSchema,
   panels: z.array(storyPanelViewSchema),
 });
 
 export type StoryResponse = z.infer<typeof storyResponseSchema>;
+
+/** Тело `POST /v1/stories`: история принята, сценарий ещё в очереди. */
+export const acceptedStorySchema = z.object({
+  storyId: z.string().min(1),
+  status: storyStatusSchema,
+});
+
+export type AcceptedStory = z.infer<typeof acceptedStorySchema>;

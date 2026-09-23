@@ -29,7 +29,7 @@ export function StoryForm() {
         />
       </label>
 
-      <div className="grid w-full min-w-0 gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr))]">
+      <div className="grid w-full min-w-0 [grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-4">
         <label className="flex min-w-0 flex-col gap-2 text-sm text-white/70">
           Стиль
           <select
@@ -72,7 +72,7 @@ export function StoryForm() {
         disabled={pending}
         className="min-h-11 w-full rounded-xl bg-(--color-forge-accent) px-4 text-base font-semibold text-white disabled:opacity-60"
       >
-        {pending ? 'Собираю сценарий…' : 'Собрать историю'}
+        {pending ? 'Создаю историю…' : 'Собрать историю'}
       </button>
     </form>
   );

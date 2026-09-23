@@ -1,5 +1,6 @@
 import {
   createStoryRequestSchema,
+  type AcceptedStory,
   type CreateStoryRequest,
   type ServiceJwtClaims,
   type StoryResponse,
@@ -14,10 +15,10 @@ import { StoriesService } from './stories.service';
 export class StoriesController {
   constructor(@Inject(StoriesService) private readonly stories: StoriesService) {}
 
-  /** Фаза 1: сценарий собирается в этом запросе. 202 и очередь появятся в фазе 2. */
+  /** История создаётся в DRAFT_PENDING, сценарий собирает очередь. */
   @Post()
-  @HttpCode(HttpStatus.CREATED)
-  create(@Body() body: unknown, @CurrentActor() actor: ServiceJwtClaims): Promise<StoryResponse> {
+  @HttpCode(HttpStatus.ACCEPTED)
+  create(@Body() body: unknown, @CurrentActor() actor: ServiceJwtClaims): Promise<AcceptedStory> {
     return this.stories.create(parseCreateStory(body), actor);
   }
 
