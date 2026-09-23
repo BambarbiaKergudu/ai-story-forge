@@ -5,6 +5,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { envFilePaths, validateEnv, type Env } from './env';
 import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
+import { ImagesModule } from './images/images.module';
 import { LlmModule } from './llm/llm.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { StoriesModule } from './stories/stories.module';
@@ -43,6 +44,7 @@ import { StoriesModule } from './stories/stories.module';
     AuthModule,
     HealthModule,
     LlmModule,
+    ImagesModule,
     StoriesModule,
   ],
 })

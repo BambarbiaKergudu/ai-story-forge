@@ -24,6 +24,7 @@ Thumbs.db
 !.vscode/extensions.json
 
 # logs and scratch
+spikes/character-consistency/out/
 *.log
 npm-debug.log*
 *.tmp.txt

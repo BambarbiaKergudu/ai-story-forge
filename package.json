@@ -17,6 +17,7 @@
     "db:migrate": "pnpm --filter @asf/api prisma:migrate",
     "db:seed": "pnpm --filter @asf/api prisma:seed",
     "db:studio": "pnpm --filter @asf/api prisma:studio",
+    "spike:consistency": "node spikes/character-consistency/run.mjs",
     "format": "prettier --write \"**/*.{ts,tsx,mjs,json,css,md,yaml,yml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,mjs,json,css,md,yaml,yml}\""
   },

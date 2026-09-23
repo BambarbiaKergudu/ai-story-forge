@@ -2,6 +2,11 @@ import { resolve } from 'node:path';
 
 import { z } from 'zod';
 
+const optionalSecret = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+  z.string().min(1).optional(),
+);
+
 export const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().min(1),
@@ -13,14 +18,17 @@ export const envSchema = z.object({
    * Пустая строка из `.env` считается отсутствием ключа.
    * `LlmService` отказывает в момент вызова, если переменной нет.
    */
-  GROQ_API_KEY: z.preprocess(
-    (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
-    z.string().min(1).optional(),
-  ),
+  GROQ_API_KEY: optionalSecret,
   GROQ_MODEL: z.string().min(1).default('openai/gpt-oss-20b'),
   GROQ_BASE_URL: z.string().url().default('https://api.groq.com/openai/v1'),
   /** Общий секрет HS256: `web` подписывает вызов, API проверяет. Минимум 32 символа. */
   SERVICE_JWT_SECRET: z.string().min(32),
+  /**
+   * Ключи картинок не обязательны на старте: `/health` поднимается без них.
+   * Пустая строка из `.env` считается отсутствием ключа.
+   */
+  FAL_KEY: optionalSecret,
+  GEMINI_API_KEY: optionalSecret,
 });
 
 export type Env = z.infer<typeof envSchema>;
