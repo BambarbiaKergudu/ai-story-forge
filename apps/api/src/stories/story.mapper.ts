@@ -40,6 +40,7 @@ export function toStoryResponse(story: StoryWithPanels): StoryResponse {
       shotType: panel.shotType,
       cameraAngle: panel.cameraAngle,
       status: panel.status,
+      imageUrl: panel.imageUrl,
     })),
   });
 }

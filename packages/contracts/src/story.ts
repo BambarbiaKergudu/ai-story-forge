@@ -34,6 +34,8 @@ export const storyPanelViewSchema = z.object({
   shotType: shotTypeSchema,
   cameraAngle: cameraAngleSchema,
   status: panelStatusSchema,
+  /** Публичный адрес кадра. `null`, пока картинка ещё не сохранена. */
+  imageUrl: z.string().min(1).nullable(),
 });
 
 export type StoryPanelView = z.infer<typeof storyPanelViewSchema>;

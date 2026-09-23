@@ -1,10 +1,11 @@
 'use server';
 
-import { acceptedStorySchema, createStoryRequestSchema } from '@asf/contracts';
+import { acceptedStorySchema, createStoryRequestSchema, type StoryResponse } from '@asf/contracts';
 import { redirect } from 'next/navigation';
 
 import { apiFetch } from '@/server/api';
 import { currentGuestKey } from '@/server/guest';
+import { loadStory } from '@/server/load-story';
 
 export type CreateStoryState = {
   error?: string;
@@ -53,6 +54,11 @@ export async function createStory(
   }
 
   redirect(`/?story=${accepted.storyId}`);
+}
+
+/** Снимок истории после разрыва SSE. Состояние в базе главнее пропущенных событий. */
+export async function reloadStory(id: string): Promise<StoryResponse | { error: string }> {
+  return loadStory(id);
 }
 
 function ideaError(paths: unknown[]): string {
