@@ -5,7 +5,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
+      "env": ["AUTH_SECRET", "SERVICE_JWT_SECRET"]
     },
     "dev": {
       "dependsOn": ["^build"],
