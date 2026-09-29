@@ -47,4 +47,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-node-pnpm
+      # Сборка страниц импортирует auth.ts. Секретов репозитория нет:
+      # это публичные заглушки из .env.example, ими сессии на проде не подписывают.
       - run: pnpm build
+        env:
+          AUTH_SECRET: dev-only-auth-secret-change-me-please
+          SERVICE_JWT_SECRET: dev-only-service-jwt-secret-change-me
