@@ -4,7 +4,7 @@ import { acceptedStorySchema, createStoryRequestSchema, type StoryResponse } fro
 import { redirect } from 'next/navigation';
 
 import { apiFetch } from '@/server/api';
-import { currentGuestKey } from '@/server/guest';
+import { currentActor } from '@/server/actor';
 import { loadStory } from '@/server/load-story';
 
 export type CreateStoryState = {
@@ -30,14 +30,10 @@ export async function createStory(
 
   let response: Response;
   try {
-    response = await apiFetch(
-      '/v1/stories',
-      { role: 'guest', guestKey: await currentGuestKey() },
-      {
-        method: 'POST',
-        body: JSON.stringify(parsed.data),
-      },
-    );
+    response = await apiFetch('/v1/stories', await currentActor(), {
+      method: 'POST',
+      body: JSON.stringify(parsed.data),
+    });
   } catch {
     return { ...values, error: 'Не удалось связаться с сервисом историй.' };
   }

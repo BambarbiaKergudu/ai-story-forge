@@ -1,3 +1,4 @@
+export * from './auth';
 export * from './health';
 export * from './script';
 export * from './service-jwt';

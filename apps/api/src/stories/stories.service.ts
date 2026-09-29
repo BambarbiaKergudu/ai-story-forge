@@ -21,7 +21,7 @@ const storyInclude = {
   panels: { orderBy: { order: 'asc' as const } },
 } satisfies Prisma.StoryInclude;
 
-/** Гость пишется в `guestKey`. `userId` — внешний ключ на `User`, строку создаёт фаза 3. */
+/** Гость пишется в `guestKey`. `userId` ссылается на строку, созданную регистрацией. */
 function storyOwner(actor: ServiceJwtClaims): { guestKey: string } | { userId: string } {
   if (actor.role === 'guest') {
     return { guestKey: actor.guestKey };

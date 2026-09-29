@@ -1,15 +1,12 @@
 import { storyResponseSchema, type StoryResponse } from '@asf/contracts';
 
+import { readActor } from './actor';
 import { apiFetch } from './api';
-import { readGuestKey } from './guest';
 
 export async function loadStory(id: string): Promise<StoryResponse | { error: string }> {
   let response: Response;
   try {
-    response = await apiFetch(`/v1/stories/${encodeURIComponent(id)}`, {
-      role: 'guest',
-      guestKey: await readGuestKey(),
-    });
+    response = await apiFetch(`/v1/stories/${encodeURIComponent(id)}`, await readActor());
   } catch {
     return { error: 'Не удалось связаться с сервисом историй.' };
   }

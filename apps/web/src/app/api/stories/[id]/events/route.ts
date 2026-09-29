@@ -1,5 +1,5 @@
 import { apiFetch } from '@/server/api';
-import { readGuestKey } from '@/server/guest';
+import { readActor } from '@/server/actor';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,18 +9,13 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ): Promise<Response> {
   const { id } = await context.params;
-  const guestKey = await readGuestKey();
 
   let upstream: Response;
   try {
-    upstream = await apiFetch(
-      `/v1/stories/${encodeURIComponent(id)}/events`,
-      { role: 'guest', guestKey },
-      {
-        headers: { Accept: 'text/event-stream' },
-        signal: request.signal,
-      },
-    );
+    upstream = await apiFetch(`/v1/stories/${encodeURIComponent(id)}/events`, await readActor(), {
+      headers: { Accept: 'text/event-stream' },
+      signal: request.signal,
+    });
   } catch {
     return new Response('Не удалось открыть поток истории.', { status: 502 });
   }

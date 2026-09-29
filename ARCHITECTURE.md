@@ -48,6 +48,9 @@ graph LR
 - App Router, Server Components для чтения, Server Actions для мутаций.
 - NextAuth в режиме **JWT-сессий, без database adapter**. Это принципиально: у `web`
   нет и не будет доступа к Postgres.
+- Регистрация и проверка пароля — `POST /v1/auth/register` и `POST /v1/auth/login`.
+  NextAuth только кладёт `userId` и `email` в cookie. Строка `User` создаётся при
+  регистрации: в сессии нет хеша пароля, собирать её «при первом заходе» не из чего.
 - Каждый вызов `api` подписывается коротким сервисным JWT (HS256, TTL 60 секунд,
   общий секрет), в payload — `userId`, `email`, `role`.
 - Проксирует SSE-поток от `api` к браузеру.
@@ -63,7 +66,7 @@ graph LR
 
 | Модуль       | Ответственность                                                        |
 | ------------ | ---------------------------------------------------------------------- |
-| `auth`       | Проверка сервисного JWT, upsert пользователя при первом заходе         |
+| `auth`       | Проверка сервисного JWT, регистрация и вход по паролю                  |
 | `stories`    | CRUD историй и панелей, ручное редактирование текста                   |
 | `generation` | Оркестрация: постановка задач, машина состояний, SSE-события           |
 | `llm`        | Клиент LLM, промпт-шаблоны, валидация ответа через zod                 |
@@ -88,10 +91,11 @@ SSE-соединения**, чего serverless-платформа не позв
 
 ```prisma
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String?  // scrypt, null только у записей без входа
+  createdAt    DateTime @default(now())
 
   stories   Story[]
   quota     Quota?
@@ -229,6 +233,8 @@ stateDiagram-v2
 через тот же механизм с `role: "guest"` и `guestKey` вместо `userId`.
 
 ```
+POST   /v1/auth/register               → 201 { userId, email, name }
+POST   /v1/auth/login                  → 200 { userId, email, name }
 POST   /v1/stories                     → 202 { storyId, status }
 GET    /v1/stories?cursor=&limit=      → 200 { items, nextCursor }
 GET    /v1/stories/:id                 → 200 { story, panels[] }
