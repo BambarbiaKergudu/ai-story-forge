@@ -48,6 +48,7 @@ model Story {
   jobs   GenerationJob[]
 
   @@index([userId, createdAt])
+  @@index([guestKey, createdAt])
   @@index([isShowcase])
 }
 

@@ -67,3 +67,6 @@ export const acceptedStorySchema = z.object({
 });
 
 export type AcceptedStory = z.infer<typeof acceptedStorySchema>;
+
+/** `POST /v1/stories` для гостя, у которого уже 3 истории за последние 24 часа. */
+export const GUEST_DAILY_LIMIT_CODE = 'guest_daily_limit';

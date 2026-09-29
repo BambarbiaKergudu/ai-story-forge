@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useActionState } from 'react';
 
 import { createStory, type CreateStoryState } from './actions';
@@ -64,6 +65,14 @@ export function StoryForm() {
       {state.error ? (
         <p role="alert" className="text-sm break-words text-(--color-forge-accent)">
           {state.error}
+          {state.guestLimit ? (
+            <>
+              {' '}
+              <Link href="/register" className="text-white underline">
+                Регистрация
+              </Link>
+            </>
+          ) : null}
         </p>
       ) : null}
 

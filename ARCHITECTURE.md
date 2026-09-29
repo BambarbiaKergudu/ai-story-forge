@@ -112,7 +112,7 @@ model Quota {
 model Story {
   id          String       @id @default(cuid())
   userId      String?                       // null = гостевая история
-  guestKey    String?                       // хеш IP+UA для гостевых квот
+  guestKey    String?                       // cookie браузера, лимит 3 истории / 24 ч
   idea        String       @db.Text
   title       String?
   styleId     String                        // пресет визуального стиля
@@ -130,6 +130,7 @@ model Story {
   jobs        GenerationJob[]
 
   @@index([userId, createdAt])
+  @@index([guestKey, createdAt])
   @@index([isShowcase])
 }
 
@@ -236,6 +237,7 @@ stateDiagram-v2
 POST   /v1/auth/register               → 201 { userId, email, name }
 POST   /v1/auth/login                  → 200 { userId, email, name }
 POST   /v1/stories                     → 202 { storyId, status }
+                                         | 429 { code: "guest_daily_limit" }
 GET    /v1/stories?cursor=&limit=      → 200 { items, nextCursor }
 GET    /v1/stories/:id                 → 200 { story, panels[] }
 GET    /v1/stories/:id/events          → SSE
@@ -256,6 +258,8 @@ GET    /v1/me/quota                    → 200 { draftLeft, consistentLeft, rese
   "panelCount": 4
 }
 ```
+
+Гость создаёт не больше трёх историй за скользящие 24 часа: считаются строки `Story` с его `guestKey`. Четвёртая отвечает `429` и кодом `guest_daily_limit`. Зарегистрированный пользователь этим лимитом не ограничен.
 
 **События SSE** (`event:` + JSON в `data:`):
 

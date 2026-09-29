@@ -1,6 +1,11 @@
 'use server';
 
-import { acceptedStorySchema, createStoryRequestSchema, type StoryResponse } from '@asf/contracts';
+import {
+  acceptedStorySchema,
+  createStoryRequestSchema,
+  GUEST_DAILY_LIMIT_CODE,
+  type StoryResponse,
+} from '@asf/contracts';
 import { redirect } from 'next/navigation';
 
 import { apiFetch } from '@/server/api';
@@ -9,6 +14,8 @@ import { loadStory } from '@/server/load-story';
 
 export type CreateStoryState = {
   error?: string;
+  /** Четвёртая история гостя за сутки: рядом с текстом ссылка на регистрацию. */
+  guestLimit?: boolean;
   idea?: string;
   styleId?: string;
   quality?: string;
@@ -39,7 +46,7 @@ export async function createStory(
   }
 
   if (!response.ok) {
-    return { ...values, error: failureMessage(response.status) };
+    return { ...values, ...(await failureState(response)) };
   }
 
   let accepted: { storyId: string };
@@ -65,18 +72,40 @@ function ideaError(paths: unknown[]): string {
   return 'Выберите стиль и качество.';
 }
 
-function failureMessage(status: number): string {
-  if (status === 502) {
-    return 'Не удалось собрать сценарий. Попробуйте ещё раз.';
+async function failureState(
+  response: Response,
+): Promise<Pick<CreateStoryState, 'error' | 'guestLimit'>> {
+  if (response.status === 429 && (await readErrorCode(response)) === GUEST_DAILY_LIMIT_CODE) {
+    return {
+      guestLimit: true,
+      error: 'За сутки без аккаунта можно собрать три истории.',
+    };
   }
 
-  if (status === 503) {
-    return 'Не удалось поставить историю в очередь. Попробуйте ещё раз.';
+  if (response.status === 502) {
+    return { error: 'Не удалось собрать сценарий. Попробуйте ещё раз.' };
   }
 
-  if (status === 400) {
-    return 'Проверьте идею: от 10 до 500 символов.';
+  if (response.status === 503) {
+    return { error: 'Не удалось поставить историю в очередь. Попробуйте ещё раз.' };
   }
 
-  return 'Не получилось создать историю.';
+  if (response.status === 400) {
+    return { error: 'Проверьте идею: от 10 до 500 символов.' };
+  }
+
+  return { error: 'Не получилось создать историю.' };
+}
+
+async function readErrorCode(response: Response): Promise<string | undefined> {
+  try {
+    const body: unknown = await response.json();
+    if (body && typeof body === 'object' && 'code' in body && typeof body.code === 'string') {
+      return body.code;
+    }
+  } catch {
+    return undefined;
+  }
+
+  return undefined;
 }

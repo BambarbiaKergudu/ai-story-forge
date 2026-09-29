@@ -15,7 +15,12 @@ import type { Prisma } from '@prisma/client';
 
 import { JobEnqueuer } from '../jobs/job-enqueuer';
 import { PrismaService } from '../prisma/prisma.service';
+import { guestDailyLimit } from './stories.errors';
 import { toDbQuality, toStoryResponse } from './story.mapper';
+
+/** Гость: не больше трёх историй за скользящие сутки. */
+const GUEST_STORY_LIMIT = 3;
+const GUEST_STORY_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 const storyInclude = {
   panels: { orderBy: { order: 'asc' as const } },
@@ -40,6 +45,10 @@ export class StoriesService {
   ) {}
 
   async create(input: CreateStoryRequest, actor: ServiceJwtClaims): Promise<AcceptedStory> {
+    if (actor.role === 'guest') {
+      await this.assertGuestWithinDailyLimit(actor.guestKey);
+    }
+
     const story = await this.prisma.story.create({
       data: {
         idea: input.idea,
@@ -63,6 +72,16 @@ export class StoriesService {
 
     this.logger.log(`story ${story.id} queued`);
     return { storyId: story.id, status: story.status };
+  }
+
+  private async assertGuestWithinDailyLimit(guestKey: string): Promise<void> {
+    const since = new Date(Date.now() - GUEST_STORY_WINDOW_MS);
+    const used = await this.prisma.story.count({
+      where: { guestKey, createdAt: { gte: since } },
+    });
+    if (used >= GUEST_STORY_LIMIT) {
+      throw guestDailyLimit();
+    }
   }
 
   async findOne(id: string): Promise<StoryResponse> {
